@@ -1,6 +1,6 @@
 using Persistence;
 using Application;
-using Infrastructure;
+using Infrastructure.Exceptions.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddApplicationServices();
 builder.Services.AddPersistenceServices(builder.Configuration);
+builder.Services.AddHttpContextAccessor();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -22,10 +23,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
+app.ConfigureCustomExceptionMiddleware();
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-app.UseMiddleware<ExceptionMiddleware>();
+
 
 app.MapControllers();
 

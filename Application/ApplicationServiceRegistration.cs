@@ -1,53 +1,54 @@
-﻿using Application.Features.Equipments.Commands.Create;
-using Application.Features.Equipments.Commands.Update;
-using Application.Features.Equipments.Rules;
-using Application.Features.Orders.Rules;
+﻿
+using Application.Services.EquipmentServices;
 using FluentValidation;
+using Infrastructure.Behavior.Validation;
+using Infrastructure.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Application;
 
-public static class ApplicationServiceRegistration
+namespace Application
 {
-    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+    public static class ApplicationServiceRegistration
     {
-        services.AddAutoMapper(Assembly.GetExecutingAssembly());
-        services.AddMediatR(configuration =>
+        public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            configuration.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+            services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
+            services.AddMediatR(configuration =>
+            {
+                configuration.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+                configuration.AddOpenBehavior(typeof(RequestValidationBehavior<,>));
+            });
 
-        });
+       
+            services.AddSubClassesOfType(Assembly.GetExecutingAssembly(), typeof(BaseBusinessRules));
 
-        services.AddValidatorsFromAssemblyContaining<CreatedEquipmentCommandValidator>();
-        services.AddValidatorsFromAssemblyContaining<UpdatedEquipmentCommandValidator>();
-        services.AddScoped<EquipmentBusinessRules>();
-        services.AddScoped<OrderBusinessRules>();
+            services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+            services.AddScoped<IEquipmentService, EquipmentManager>();
+            return services;
+        }
 
-        return services;
-
-
-    }
-    public static IServiceCollection AddSubClassesOfType(
-      this IServiceCollection services,
-      Assembly assembly,
-      Type type,
-      Func<IServiceCollection, Type, IServiceCollection>? addWithLifeCycle = null
-   )
-    {
-        var types = assembly.GetTypes().Where(t => t.IsSubclassOf(type) && type != t).ToList();
-        foreach (var item in types)
-            if (addWithLifeCycle == null)
-                services.AddScoped(item);
-
-            else
-                addWithLifeCycle(services, type);
-        return services;
+        public static IServiceCollection AddSubClassesOfType(
+            this IServiceCollection services,
+            Assembly assembly,
+            Type baseType,
+            Func<IServiceCollection, Type, IServiceCollection>? addWithLifeCycle = null
+        )
+        {
+            var types = assembly.GetTypes().Where(t => t.IsSubclassOf(baseType) && baseType != t).ToList();
+            foreach (var type in types)
+            {
+                if (addWithLifeCycle == null)
+                {
+                    services.AddScoped(type);
+                }
+                else
+                {
+                    addWithLifeCycle(services, type);
+                }
+            }
+            return services;
+        }
     }
 }

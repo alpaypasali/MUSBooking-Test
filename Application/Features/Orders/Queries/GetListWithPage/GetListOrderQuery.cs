@@ -1,77 +1,47 @@
-﻿using Application.Features.Orders.Queries.GetListWithPage;
-using Application.Services;
+﻿using Application.Services;
+using AutoMapper;
+using Domain.Entities;
 using Infrastructure.Paging;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
-using System.Text.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-
-
-public class GetListOrderQuery : IRequest<PaginatedList<GetListOrderListItemDto>>
+namespace Application.Features.Orders.Queries.GetListWithPage
 {
-    public int PageNumber { get; }
-    public int PageSize { get; }
-
-    public GetListOrderQuery(int pageNumber, int pageSize)
+    public class GetListOrderQuery:IRequest<GetListResponse<GetListDto>>
     {
-        PageNumber = pageNumber;
-        PageSize = pageSize;
-    }
-    public class GetListOrderQueryHandler : IRequestHandler<GetListOrderQuery, PaginatedList<GetListOrderListItemDto>>
-    {
-        private readonly IOrderRepository _orderRepository;
+        public PageRequest PageRequest {  get; set; }
 
-        public GetListOrderQueryHandler(IOrderRepository orderRepository)
+        public class GetlistOrderQueryHandler : IRequestHandler<GetListOrderQuery, GetListResponse<GetListDto>>
         {
-            _orderRepository = orderRepository;
-        }
+            private readonly IOrderRepository _orderRepository;
+            private readonly IMapper _mapper;
 
-        public async Task<PaginatedList<GetListOrderListItemDto>> Handle(GetListOrderQuery request, CancellationToken cancellationToken)
-        {
-            var pageNumber = request.PageNumber;
-            var pageSize = request.PageSize;
-
-            var orders = await _orderRepository.GetListAsync(
-
-                include: query => query.Include(o => o.OrderEquipments).ThenInclude(oe => oe.Equipment),
-                enableTracking: false
-            );
-            var orders2 = orders.OrderBy(x => x.CreatedAt);
-
-            var paginatedOrders = await PaginatedList<GetListOrderListItemDto>.CreateAsync(
-      orders2.AsQueryable().Select(order => new GetListOrderListItemDto
-      {
-          Id = order.Id,
-          Description = order.Description,
-          CreatedAt = order.CreatedAt,
-          UpdatedAt = order.UpdatedAt,
-          Price = order.Price,
-          Equipments = order.OrderEquipments.Select(oe => oe.Equipment).Select(e => new EquipmentDto
-          {
-              Id = e.Id,
-              Name = e.Name,
-              Amount = e.Amount,
-              Price = e.Price
-          }).ToList()
-      }),
-      pageNumber,
-      pageSize
-  );
-
-            var options = new JsonSerializerOptions
+            public GetlistOrderQueryHandler(IOrderRepository orderRepository, IMapper mapper)
             {
-                ReferenceHandler = ReferenceHandler.Preserve
-            };
+                _orderRepository = orderRepository;
+                _mapper = mapper;
+            }
 
+            public async Task<GetListResponse<GetListDto>> Handle(GetListOrderQuery request, CancellationToken cancellationToken)
+            {
+                Paginate<Order> orders = await _orderRepository.GetListAsync(
+                  include: queryable => queryable.Include(o => o.OrderEquipments).ThenInclude(oe => oe.Equipment),
+                 index: request.PageRequest.PageIndex,
+                size: request.PageRequest.PageSize,
+                
+                cancellationToken:cancellationToken,
+                 orderBy: queryable => queryable.OrderBy(o => o.CreatedAt));
 
-            var json = JsonSerializer.Serialize(paginatedOrders, options);
+                var mappedBrandListModel = _mapper.Map<GetListResponse<GetListDto>>(orders);
 
+                return mappedBrandListModel;
 
-            return paginatedOrders;
+            }
         }
-
     }
 }
-
-

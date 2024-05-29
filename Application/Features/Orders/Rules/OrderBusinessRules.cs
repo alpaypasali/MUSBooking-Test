@@ -1,6 +1,6 @@
-﻿using Application.Features.Orders.Commands.Create;
-using Application.Services;
+﻿using Application.Services;
 using Domain.Entities;
+using Infrastructure.Exceptions;
 using Infrastructure.NewFolder;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Application.Features.Orders.Rules
 {
-    public class OrderBusinessRules
+    public class OrderBusinessRules:BaseBusinessRules
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IEquipmentRepository _equipmentRepository;
@@ -21,18 +21,7 @@ namespace Application.Features.Orders.Rules
             _equipmentRepository = equipmentRepository;
         }
 
-        public async Task CheckEquipmentAmount(List<CreatedOrderCommand.OrderEquipmentDto> orderEquipments)
-        {
-            foreach (var orderEquipmentDto in orderEquipments)
-            {
-                var equipment = await _equipmentRepository.GetByIdAsync(orderEquipmentDto.EquipmentId);
-                EquipmentIdShouldExistWhenSelected(equipment);
-                if (equipment.Amount < orderEquipmentDto.Quantity)
-                {
-                    throw new Exception($"Not enough stock available for equipment with ID {orderEquipmentDto.EquipmentId}.");
-                }
-            }
-        }
+     
 
         public void EquipmentIdShouldExistWhenSelected(Equipment? equipment)
         {

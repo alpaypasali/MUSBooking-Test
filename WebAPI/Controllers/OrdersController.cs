@@ -1,4 +1,5 @@
-﻿using Application.Features.Orders.Commands.Create;
+﻿
+using Application.Features.Orders.Commands.Create;
 using Application.Features.Orders.Commands.Delete;
 using Application.Features.Orders.Commands.Update;
 using Application.Features.Orders.Queries.GetListWithPage;
@@ -12,31 +13,18 @@ namespace WebAPI.Controllers
     [ApiController]
     public class OrdersController : BaseController
     {
-     /// <summary>
-     /// Добавляет заказ в ответ на HTTP POST запрос.
-     /// </summary>
-     /// <param name="createdOrderCommand">Команда на создание заказа</param>
-     /// <returns>Соответствующий HTTP ответ в зависимости от результата добавления заказа</returns>
+        /// <summary>
+        /// Добавляет заказ в ответ на HTTP POST запрос.
+        /// </summary>
+        /// <param name="createdOrderCommand">Команда на создание заказа</param>
+        /// <returns>Соответствующий HTTP ответ в зависимости от результата добавления заказа</returns>
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] CreatedOrderCommand createdOrderCommand)
+        public async Task<IActionResult> Add([FromBody] CreateOrderCommand createdOrderCommand)
         {
-            try
-            {
-                await Mediator.Send(createdOrderCommand);
-                return Ok();
-            }
-            catch (ValidationException ex)
-            {
-                return UnprocessableEntity(new { errors = ex.Message });
-            }
-            catch (BusinessException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = "Произошла непредвиденная ошибка." });
-            }
+
+            await Mediator.Send(createdOrderCommand);
+            return Ok();
+
         }
 
         /// <summary>
@@ -45,21 +33,11 @@ namespace WebAPI.Controllers
         /// <param name="deletedOrderCommand">Команда на удаление заказа</param>
         /// <returns>Соответствующий HTTP ответ в зависимости от результата удаления заказа</returns>
         [HttpDelete]
-        public async Task<IActionResult> Delete([FromBody] DeletedOrderCommand deletedOrderCommand)
+        public async Task<IActionResult> Delete([FromBody] DeleteOrderCommand deletedOrderCommand)
         {
-            try
-            {
-                await Mediator.Send(deletedOrderCommand);
-                return Ok();
-            }
-            catch (BusinessException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = "Произошла непредвиденная ошибка." });
-            }
+            await Mediator.Send(deletedOrderCommand);
+            return Ok();
+
         }
 
         /// <summary>
@@ -67,26 +45,13 @@ namespace WebAPI.Controllers
         /// </summary>
         /// <param name="updatedOrderCommand">Команда на обновление заказа</param>
         /// <returns>Соответствующий HTTP ответ в зависимости от результата обновления заказа</returns>
+        /// 
         [HttpPut]
-        public async Task<IActionResult> Update([FromBody] UpdatedOrderCommand updatedOrderCommand)
+        public async Task<IActionResult> Update([FromBody] UpdateOrderCommand updatedOrderCommand)
         {
-            try
-            {
-                await Mediator.Send(updatedOrderCommand);
-                return Ok();
-            }
-            catch (ValidationException ex)
-            {
-                return UnprocessableEntity(new { errors = ex.Message });
-            }
-            catch (BusinessException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = "Произошла непредвиденная ошибка." });
-            }
+            await Mediator.Send(updatedOrderCommand);
+            return Ok();
+
         }
 
         /// <summary>
@@ -95,15 +60,16 @@ namespace WebAPI.Controllers
         /// <param name="pageNumber">Номер страницы</param>
         /// <param name="pageSize">Размер страницы</param>
         /// <returns>Список заказов или соответствующий HTTP ответ</returns>
+        /// 
         [HttpGet]
-        public async Task<ActionResult<PaginatedList<GetListOrderListItemDto>>> GetOrders([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetList([FromQuery] PageRequest pageRequest)
         {
-            var query = new GetListOrderQuery(pageNumber, pageSize);
-            var orders = await Mediator.Send(query);
+            GetListOrderQuery query = new() { PageRequest = pageRequest };
+            GetListResponse<GetListDto> response = await Mediator.Send(query);
+            return Ok(response);
 
-            return Ok(orders);
+
         }
-
     }
 }
 

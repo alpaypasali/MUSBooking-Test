@@ -16,7 +16,7 @@ namespace Domain.Entities
             {
                 if (value < 0)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(value), "Amount cannot be less than 0.");
+                    throw new Exception("Amount cannot be less than 0.");
                 }
                 _amount = value;
             }

@@ -24,24 +24,19 @@ namespace Application.Features.Equipments.Commands.Create
         {
             private readonly IEquipmentRepository _equipmentRepository;
             private readonly IMapper _mapper;
-            private readonly IValidator<CreatedEquipmentCommand> _validator;
+   
             private readonly EquipmentBusinessRules _equipmentBusinessRules;
 
-            public CreatedEquipmentCommandHandler(IEquipmentRepository equipmentRepository, IMapper mapper, IValidator<CreatedEquipmentCommand> validator, EquipmentBusinessRules equipmentBusinessRules)
+            public CreatedEquipmentCommandHandler(IEquipmentRepository equipmentRepository, IMapper mapper, EquipmentBusinessRules equipmentBusinessRules)
             {
                 _equipmentRepository = equipmentRepository;
                 _mapper = mapper;
-                _validator = validator;
                 _equipmentBusinessRules = equipmentBusinessRules;
             }
 
             public async Task<CreatedEquipmentResponse> Handle(CreatedEquipmentCommand request, CancellationToken cancellationToken)
             {
-                var validationResult = await _validator.ValidateAsync(request, cancellationToken);
-                if (!validationResult.IsValid)
-                {
-                    throw new ValidationException(validationResult.Errors);
-                }
+              
                 await _equipmentBusinessRules.EquipmentNameCanNotBeDuplicatedWhenInserted(request.Name);
 
                 Equipment equipment = _mapper.Map<Equipment>(request);

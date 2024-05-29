@@ -7,20 +7,20 @@ using System.Threading.Tasks;
 
 namespace Application.Features.Orders.Queries.GetListWithPage
 {
-    public class GetListOrderListItemDto
+    public class GetListDto
     {
         public int Id { get; set; }
         public string Description { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public decimal Price { get; set; }
-        public List<EquipmentDto> Equipments { get; set; }
-    }
-    public class EquipmentDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public int Amount { get; set; }
-        public decimal Price { get; set; }
+        public ICollection<OrderEquipmentDto> OrderEquipments { get; set; }
+
+        public class OrderEquipmentDto
+        {
+            public int EquipmentId { get; set; }
+            public string EquipmentName { get; set; }
+            public int Quantity { get; set; }
+        }
     }
 }

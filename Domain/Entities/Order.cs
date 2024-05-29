@@ -14,12 +14,14 @@ namespace Domain.Entities
         public DateTime? UpdatedAt { get; set; }
         public decimal Price { get; set; }
 
+     
         public virtual ICollection<OrderEquipment> OrderEquipments { get; set; } = new List<OrderEquipment>();
      
 
         public Order()
         {
             OrderEquipments = new HashSet<OrderEquipment>();
+          
           
         }
 
